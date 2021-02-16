@@ -1,14 +1,15 @@
 use std::io;
 use std::fs::File;
 use std::io::Write;
-use core::{slice, mem};
+use std::slice;
+use std::mem;
 
 #[derive(Clone)]
 pub struct Color(u8, u8, u8);
 
 impl Color {
-    pub fn new(r: u8, g: u8, b:u8) -> Self {
-        Self(r, g, b)
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
+        Self(b, g, r) // note.
     }
 }
 
@@ -31,7 +32,7 @@ impl Image for TGAImage {
         Self {
             width,
             height,
-            data: vec![Color(0,0,0); (width * height) as usize],
+            data: vec![Color(0, 0, 0); (width * height) as usize],
         }
     }
 
@@ -67,7 +68,8 @@ impl Image for TGAImage {
             height: u16,
             pixel_depth: u8,
             image_descriptor: u8,
-        };
+        }
+        ;
         let h = TGAHeader {
             image_type: 2,
             width: self.width as u16,
@@ -83,11 +85,33 @@ impl Image for TGAImage {
         Ok(())
     }
 
-    fn draw_line(self: &mut Self, x0: u32, y0: u32, x1: u32, y1: u32, color: Color) {
+    fn draw_line(self: &mut Self, mut x0: u32, mut y0: u32, mut x1: u32, mut y1: u32, color: Color) {
+        let mut steep = false;
+        if (x0 as i32 - x1 as i32).abs() < (y0 as i32 - y1 as i32).abs() {
+            x0 = x0 ^ y0;
+            y0 = x0 ^ y0;
+            x0 = x0 ^ y0;
+            x1 = x1 ^ y1;
+            y1 = x1 ^ y1;
+            x1 = x1 ^ y1;
+            steep = true;
+        }
+        if x0 > x1 {
+            x0 = x0 ^ x1;
+            x1 = x0 ^ x1;
+            x0 = x0 ^ x1;
+            y0 = y0 ^ y1;
+            y1 = y0 ^ y1;
+            y0 = y0 ^ y1;
+        }
         for x in x0..=x1 {
             let t = (x - x0) as f32 / (x1 - x0) as f32;
             let y = y0 as f32 * (1f32 - t) + y1 as f32 * t;
-            self.set_pixel(x, y as u32, color.clone());
+            if steep {
+                self.set_pixel(y as u32, x, color.clone());
+            } else {
+                self.set_pixel(x, y as u32, color.clone());
+            }
         }
     }
 }
