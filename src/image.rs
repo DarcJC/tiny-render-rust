@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Write;
 use core::{slice, mem};
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Color(u8, u8, u8);
 
 impl Color {
@@ -17,7 +17,7 @@ pub trait Image {
     fn apply_gamma(self: &mut Self, gamma: f32);
     fn set_pixel(self: &mut Self, x: u32, y: u32, c: Color);
     fn write_to_file(self: &Self, filename: &str) -> io::Result<()>;
-    fn draw_line(self: &mut Self, x0: u32, y0: u32, x1: u32, y1: u32, color: &Color);
+    fn draw_line(self: &mut Self, x0: u32, y0: u32, x1: u32, y1: u32, color: Color);
 }
 
 pub struct TGAImage {
@@ -84,11 +84,12 @@ impl Image for TGAImage {
     }
 
     fn draw_line(self: &mut Self, x0: u32, y0: u32, x1: u32, y1: u32, color: Color) {
-        let t= 0f32;
+        let mut t= 0f32;
         while t < 1f32 {
-            let x = x0 + (x1 - x0) * t;
-            let y = y0 + (y1 - y0) * t;
-            self.set_pixel(x, y, color);
+            let x = (x0 + (x1 - x0)) as f32 * t;
+            let y = (y0 + (y1 - y0)) as f32 * t;
+            self.set_pixel(x as u32, y as u32, color.clone());
+            t += 0.01f32
         }
     }
 }
