@@ -84,12 +84,10 @@ impl Image for TGAImage {
     }
 
     fn draw_line(self: &mut Self, x0: u32, y0: u32, x1: u32, y1: u32, color: Color) {
-        let mut t= 0f32;
-        while t < 1f32 {
-            let x = (x0 + (x1 - x0)) as f32 * t;
-            let y = (y0 + (y1 - y0)) as f32 * t;
-            self.set_pixel(x as u32, y as u32, color.clone());
-            t += 0.01f32
+        for x in x0..=x1 {
+            let t = (x - x0) as f32 / (x1 - x0) as f32;
+            let y = y0 as f32 * (1f32 - t) + y1 as f32 * t;
+            self.set_pixel(x, y as u32, color.clone());
         }
     }
 }
