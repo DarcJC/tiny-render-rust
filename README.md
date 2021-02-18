@@ -87,3 +87,9 @@ Opps! It doesn't work!
 ```
 
 If the slope of the given line segment is too large, we could transpose this axis to calculate. Just remember to transpose it back when we draw it.
+
+![](https://cdn.jsdelivr.net/gh/DarcJC/pictures-host/imgs/20210216200636.png)
+
+### TL;DR;
+
+The algorithm above are all using two coordinates to calculate how many points to draw. Using an algorithm simply based on $$x$$ only makes some "normal" lines to be draw correctly. So we add some "rules" to sure that the line to draw is follow "symmetry".
