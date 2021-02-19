@@ -49,6 +49,10 @@ impl Image for TGAImage {
     }
 
     fn set_pixel(self: &mut Self, x: u32, y: u32, c: Color) {
+        if x + y * self.width > self.data.len() as u32 {
+            println!("Draw over bounds: {}/{}", x + y * self.width, self.data.len());
+            return;
+        }
         self.data[(x + y * self.width) as usize] = c;
     }
 

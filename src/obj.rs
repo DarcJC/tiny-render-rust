@@ -4,7 +4,7 @@ use std::fmt;
 
 pub struct ModelObject {
     vertices: Vec<(f64, f64, f64)>,
-    faces: Vec<(usize, usize, usize)>,
+    faces: Vec<Vec<usize>>,
 }
 
 #[derive(Debug, Clone)]
@@ -59,7 +59,7 @@ impl ModelObject {
                             Err(_e) => return Err(ModelParseError),
                         }
                     }
-                    t.faces.push((c[0], c[1], c[2]));
+                    t.faces.push(vec![c[0] - 1, c[1] - 1, c[2] - 1]); // the index start by 1
                 }
             }
             Ok(t)
@@ -70,7 +70,7 @@ impl ModelObject {
     pub fn get_vertex(&self, index: usize) -> (f64, f64, f64) {
         self.vertices[index]
     }
-    pub fn get_face(&self, index: usize) -> (usize, usize, usize) {
-        self.faces[index]
+    pub fn get_face(&self, index: usize) -> &Vec<usize> {
+        &self.faces[index]
     }
 }
