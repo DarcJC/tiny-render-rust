@@ -93,3 +93,32 @@ If the slope of the given line segment is too large, we could transpose this axi
 ### TL;DR;
 
 The algorithm above are all using two coordinates to calculate how many points to draw. Using an algorithm simply based on $$x$$ only makes some "normal" lines to be draw correctly. So we add some "rules" to sure that the line to draw is follow "symmetry".
+
+![](https://cdn.jsdelivr.net/gh/DarcJC/pictures-host/imgs/20210219160336.png)
+
+See commit#3aea48e and commit#cd6849b.
+
+>A good method of drawing a triangle must have the following features:
+>
+>- It should be (surprise!) simple and fast.
+>- It should be symmetrical: the picture should not depend on the order of vertices passed to the drawing function.
+>- If two triangles have two common vertices, there should be no holes between them because of rasterization rounding.
+>- We could add more requirements, but let’s do with these ones. Traditionally a line sweeping is used:
+>
+>1. Sort vertices of the triangle by their y-coordinates;
+>2. Rasterize simultaneously the left and the right sides of the triangle;
+>3. Draw a horizontal line segment between the left and the right boundary points.
+
+```rust
+if c0[1] > c1[1] {
+    swap(c0, c1);
+}
+if c0[1] > c2[1] {
+    swap(c0, c2);
+}
+if c1[1] > c2[1] {
+    swap(c1, c2);
+}
+// sort points by y-coordinates
+```
+

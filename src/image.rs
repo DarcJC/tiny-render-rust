@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Write;
 use std::slice;
 use std::mem;
+use std::mem::swap;
 
 #[derive(Clone)]
 pub struct Color(u8, u8, u8);
@@ -19,6 +20,7 @@ pub trait Image {
     fn set_pixel(self: &mut Self, x: u32, y: u32, c: Color);
     fn write_to_file(self: &Self, filename: &str) -> io::Result<()>;
     fn draw_line(self: &mut Self, x0: u32, y0: u32, x1: u32, y1: u32, color: Color);
+    fn draw_triangle(self: &mut Self, c0: &mut [u32;2], c1: &mut [u32;2], c2: &mut [u32;2], color: Color);
 }
 
 pub struct TGAImage {
@@ -92,21 +94,13 @@ impl Image for TGAImage {
     fn draw_line(self: &mut Self, mut x0: u32, mut y0: u32, mut x1: u32, mut y1: u32, color: Color) {
         let mut steep = false;
         if (x0 as i32 - x1 as i32).abs() < (y0 as i32 - y1 as i32).abs() {
-            x0 = x0 ^ y0;
-            y0 = x0 ^ y0;
-            x0 = x0 ^ y0;
-            x1 = x1 ^ y1;
-            y1 = x1 ^ y1;
-            x1 = x1 ^ y1;
+            swap(&mut x0, &mut y0);
+            swap(&mut x1, &mut y1);
             steep = true;
         }
         if x0 > x1 {
-            x0 = x0 ^ x1;
-            x1 = x0 ^ x1;
-            x0 = x0 ^ x1;
-            y0 = y0 ^ y1;
-            y1 = y0 ^ y1;
-            y0 = y0 ^ y1;
+            swap(&mut x0, &mut x1);
+            swap(&mut y0, &mut y1);
         }
         for x in x0..=x1 {
             let t = (x - x0) as f32 / (x1 - x0) as f32;
@@ -117,6 +111,27 @@ impl Image for TGAImage {
                 self.set_pixel(x, y as u32, color.clone());
             }
         }
+    }
+
+    fn draw_triangle(self: &mut Self, c0: &mut [u32; 2], c1: &mut [u32; 2], c2: &mut [u32;2], color: Color) {
+        if c0[1] > c1[1] {
+            swap(c0, c1);
+        }
+        if c0[1] > c2[1] {
+            swap(c0, c2);
+        }
+        if c1[1] > c2[1] {
+            swap(c1, c2);
+        }
+
+        let height = c2[1] - c0[1];
+        for i in 0..height {
+            
+        }
+
+        self.draw_line(c0[0], c0[1], c1[0], c1[1], color.clone());
+        self.draw_line(c1[0], c1[1], c2[0], c2[1], color.clone());
+        self.draw_line(c2[0], c2[1], c0[0], c0[1], color);
     }
 }
 
