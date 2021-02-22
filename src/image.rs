@@ -4,6 +4,7 @@ use std::io::Write;
 use std::slice;
 use std::mem;
 use std::mem::swap;
+use crate::vec::{Vec3, Point};
 
 #[derive(Clone)]
 pub struct Color(u8, u8, u8);
@@ -19,14 +20,34 @@ pub trait Image {
     fn apply_gamma(self: &mut Self, gamma: f32);
     fn set_pixel(self: &mut Self, x: u32, y: u32, c: Color);
     fn write_to_file(self: &Self, filename: &str) -> io::Result<()>;
-    fn draw_line(self: &mut Self, x0: u32, y0: u32, x1: u32, y1: u32, color: Color);
-    fn draw_triangle(self: &mut Self, c0: &mut [u32;2], c1: &mut [u32;2], c2: &mut [u32;2], color: Color);
+    fn draw_line(self: &mut Self, p0: Point, p1: Point, color: Color);
+    fn draw_triangle(self: &mut Self, pts: &Vec<Point>, color: Color);
 }
 
 pub struct TGAImage {
     width: u32,
     height: u32,
     data: Vec<Color>,
+}
+
+pub fn barycentric(points: &Vec<Point>, p: Point) -> Vec3<f64> {
+    let v1 = Vec3::new(
+        points[2].x as f64 - points[0].x as f64,
+        points[1].x as f64 - points[0].x as f64,
+        points[0].x as f64 - p.x as f64,
+    );
+    let v2 = Vec3::new(
+        points[2].y as f64 - points[0].y as f64,
+        points[1].y as f64 - points[0].y as f64,
+        points[0].y as f64 - p.y as f64,
+    );
+    let c = Vec3::cross(&v1, &v2);
+
+    if c.z.abs() < 1.0 {
+        Vec3::new(-1.0, 1.0, 1.0)
+    } else {
+        Vec3::new(1.0 - (c.x + c.y) / c.z, c.y / c.z, c.x / c.z)
+    }
 }
 
 impl Image for TGAImage {
@@ -91,20 +112,19 @@ impl Image for TGAImage {
         Ok(())
     }
 
-    fn draw_line(self: &mut Self, mut x0: u32, mut y0: u32, mut x1: u32, mut y1: u32, color: Color) {
+    fn draw_line(self: &mut Self, mut p0: Point, mut p1: Point, color: Color) {
         let mut steep = false;
-        if (x0 as i32 - x1 as i32).abs() < (y0 as i32 - y1 as i32).abs() {
-            swap(&mut x0, &mut y0);
-            swap(&mut x1, &mut y1);
+        if (p0.x as i32 - p1.x as i32).abs() < (p0.y as i32 - p1.y as i32).abs() {
+            swap(&mut p0.x, &mut p0.y);
+            swap(&mut p1.x, &mut p1.y);
             steep = true;
         }
-        if x0 > x1 {
-            swap(&mut x0, &mut x1);
-            swap(&mut y0, &mut y1);
+        if p0.x > p1.x {
+            swap(&mut p0, &mut p1);
         }
-        for x in x0..=x1 {
-            let t = (x - x0) as f32 / (x1 - x0) as f32;
-            let y = y0 as f32 * (1f32 - t) + y1 as f32 * t;
+        for x in p0.x..=p1.x {
+            let t = (x - p0.x) as f32 / (p1.x - p0.x) as f32;
+            let y = p0.y as f32 * (1f32 - t) + p1.y as f32 * t;
             if steep {
                 self.set_pixel(y as u32, x, color.clone());
             } else {
@@ -113,25 +133,32 @@ impl Image for TGAImage {
         }
     }
 
-    fn draw_triangle(self: &mut Self, c0: &mut [u32; 2], c1: &mut [u32; 2], c2: &mut [u32;2], color: Color) {
-        if c0[1] > c1[1] {
-            swap(c0, c1);
+    fn draw_triangle(self: &mut Self, pts: &Vec<Point>, color: Color) {
+        let mut bboxmax = Point::new(0, 0);
+        let mut bboxmin = Point::new(self.width - 1, self.height - 1);
+        for p in pts {
+            if p.x < bboxmin.x {
+                bboxmin.x = p.x;
+            }
+            if p.y < bboxmin.y {
+                bboxmin.y = p.y;
+            }
+            if p.x > bboxmax.x {
+                bboxmax.x = p.x;
+            }
+            if p.y > bboxmax.y {
+                bboxmax.y = p.y;
+            }
         }
-        if c0[1] > c2[1] {
-            swap(c0, c2);
+        for i in bboxmin.x ..= bboxmax.x {
+            for j in bboxmin.y ..= bboxmax.y {
+                let p = Point::new(i, j);
+                let res = barycentric(&pts, p);
+                if res.x >= 0.0 && res.y >= 0.0 && res.z >= 0.0 {
+                    self.set_pixel(i, j, color.clone());
+                }
+            }
         }
-        if c1[1] > c2[1] {
-            swap(c1, c2);
-        }
-
-        let height = c2[1] - c0[1];
-        for i in 0..height {
-            
-        }
-
-        self.draw_line(c0[0], c0[1], c1[0], c1[1], color.clone());
-        self.draw_line(c1[0], c1[1], c2[0], c2[1], color.clone());
-        self.draw_line(c2[0], c2[1], c0[0], c0[1], color);
     }
 }
 

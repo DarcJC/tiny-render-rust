@@ -1,5 +1,8 @@
 use std::ops::{Add, Sub, Mul};
+use num::traits::{Num, Float};
+use std::fmt;
 
+#[derive(Clone, Copy, Debug)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
@@ -68,5 +71,23 @@ impl<T: Num + Copy> Mul for Vec3<T> {
 
     fn mul(self, rhs: Vec3<T>) -> T {
         Vec3::dot(&self, &rhs)
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Point {
+    pub x: u32,
+    pub y: u32,
+}
+
+impl Point {
+    pub fn new(x: u32, y: u32) -> Self {
+        Self {x, y}
+    }
+}
+
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
     }
 }

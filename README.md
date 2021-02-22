@@ -4,6 +4,8 @@ Following [https://github.com/ssloy/tinyrenderer/wiki](https://github.com/ssloy/
 #### Thanks
 [@jonvaldes](https://github.com/jonvaldes) for [TGA file editor](https://gist.github.com/jonvaldes/607fbc380f816d205afb).
 
+[@illbexyz](https://github.com/illbexyz) for [tinyrenderer-rust](https://github.com/illbexyz/tinyrenderer-rust).
+
 ## Start
 
 Here is the first attempt.
