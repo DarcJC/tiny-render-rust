@@ -81,6 +81,10 @@ pub struct Point {
 }
 
 impl Point {
+    pub fn new_empty() -> Self {
+        Self {x:0, y:0}
+    }
+
     pub fn new(x: u32, y: u32) -> Self {
         Self {x, y}
     }
